@@ -120,3 +120,50 @@ backups/
 
 # Turbo
 .turbo
+
+# Prisma
+prisma/migrations/
+.env
+
+# React Native
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Metro
+.metro-health-check*
+
+# Flipper
+ios/Pods/
+
+# CocoaPods
+ios/Pods/
+
+# Android
+android/app/build/
+android/build/
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/*.iml
+android/.idea/
+android/.DS_Store
+android/app/release/
+
+# iOS
+ios/build/
+ios/Pods/
+ios/*.xcworkspace
+ios/*.xcuserdata
+ios/.xcode.env.local
+
+# macOS
+.DS_Store
