@@ -13,7 +13,12 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean",
-    "type-check": "turbo run type-check"
+    "type-check": "turbo run type-check",
+    "setup:env": "bash scripts/setup-env.sh",
+    "setup:env:win": "scripts\\setup-env.bat",
+    "infra:start": "cd infra && pnpm run dev:start",
+    "infra:stop": "cd infra && pnpm run dev:stop",
+    "infra:status": "cd infra && pnpm run status"
   },
   "devDependencies": {
     "turbo": "^1.10.12",
