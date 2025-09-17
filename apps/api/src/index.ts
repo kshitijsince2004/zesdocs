@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { initializeDatabase, getDatabaseHealth } from './db/connection';
+import authRoutes from './routes/auth';
+import linksRoutes from './routes/links';
+import internalRoutes from './routes/internal';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +21,11 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/auth', authRoutes);
+app.use('/links', linksRoutes);
+app.use('/internal', internalRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
