@@ -5,6 +5,8 @@ import got from 'got';
 import fs from 'fs';
 import path from 'path';
 import { parseHtmlMetadata } from './parsers/html';
+import { classifyContentType } from './parsers/classifier';
+import { suggestTags } from './parsers/tagger';
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const connection = new IORedis(redisUrl);
@@ -38,13 +40,15 @@ async function fetchHtml(url: string): Promise<string> {
   return res.body as string;
 }
 
-async function persistMetadata(linkId: string, meta: ReturnType<typeof parseHtmlMetadata>) {
+async function persistMetadata(linkId: string, meta: ReturnType<typeof parseHtmlMetadata> & { contentType?: string; tags?: string[] }) {
   const payload: any = {
     title: meta.title,
     description: meta.description,
     imageUrl: meta.image,
     siteName: meta.siteName,
     canonicalUrl: meta.canonicalUrl,
+    contentType: meta.contentType,
+    tags: meta.tags,
     status: 'READY',
   };
 
@@ -64,6 +68,8 @@ async function indexToElasticsearch(doc: {
   ownerId: string;
   title?: string;
   description?: string;
+  contentType?: string;
+  tags?: string[];
   createdAt: string;
 }) {
   await got.put(`${ES_URL}/${ES_INDEX}/_doc/${doc.id}`, {
@@ -86,8 +92,10 @@ async function handleJob(job: Job<{ linkId: string; ownerId: string; url: string
     console.log(`[indexer] Saved HTML to ${filePath} (${html.length} bytes)`);
 
     const meta = parseHtmlMetadata(html, url);
+    const contentType = classifyContentType(url, html.slice(0, 1000));
+    const tags = suggestTags({ title: meta.title, description: meta.description });
 
-    await persistMetadata(linkId, meta);
+    await persistMetadata(linkId, { ...meta, contentType, tags });
     console.log(`[indexer] Persisted metadata for ${linkId}`);
 
     await indexToElasticsearch({
@@ -96,6 +104,8 @@ async function handleJob(job: Job<{ linkId: string; ownerId: string; url: string
       ownerId,
       title: meta.title,
       description: meta.description,
+      contentType,
+      tags,
       createdAt: new Date().toISOString(),
     });
     console.log(`[indexer] Indexed doc in Elasticsearch id=${linkId}`);
