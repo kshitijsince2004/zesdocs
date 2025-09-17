@@ -15,6 +15,9 @@ const TMP_DIR = path.resolve(__dirname, '../tmp');
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || 'dev-internal-key';
 
+const ES_URL = process.env.ELASTICSEARCH_URL || 'http://localhost:9200';
+const ES_INDEX = process.env.ES_INDEX || 'zesdocs_links';
+
 function ensureTmpDir() {
   if (!fs.existsSync(TMP_DIR)) {
     fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -55,6 +58,21 @@ async function persistMetadata(linkId: string, meta: ReturnType<typeof parseHtml
   });
 }
 
+async function indexToElasticsearch(doc: {
+  id: string;
+  url: string;
+  ownerId: string;
+  title?: string;
+  description?: string;
+  createdAt: string;
+}) {
+  await got.put(`${ES_URL}/${ES_INDEX}/_doc/${doc.id}`, {
+    json: doc,
+    headers: { 'content-type': 'application/json' },
+    timeout: { request: 10000 },
+  });
+}
+
 async function handleJob(job: Job<{ linkId: string; ownerId: string; url: string }>) {
   const { linkId, ownerId, url } = job.data;
   console.log(`[indexer] Received job id=${job.id} linkId=${linkId} ownerId=${ownerId} url=${url}`);
@@ -68,10 +86,21 @@ async function handleJob(job: Job<{ linkId: string; ownerId: string; url: string
     console.log(`[indexer] Saved HTML to ${filePath} (${html.length} bytes)`);
 
     const meta = parseHtmlMetadata(html, url);
+
     await persistMetadata(linkId, meta);
     console.log(`[indexer] Persisted metadata for ${linkId}`);
+
+    await indexToElasticsearch({
+      id: linkId,
+      url,
+      ownerId,
+      title: meta.title,
+      description: meta.description,
+      createdAt: new Date().toISOString(),
+    });
+    console.log(`[indexer] Indexed doc in Elasticsearch id=${linkId}`);
   } catch (err: any) {
-    console.error(`[indexer] Fetch/Parse/Persist failed for ${url}: ${err.message || err}`);
+    console.error(`[indexer] Fetch/Parse/Persist/Index failed for ${url}: ${err.message || err}`);
     throw err;
   }
 

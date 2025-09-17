@@ -9,7 +9,8 @@
     "dev:start": "bash scripts/start.sh",
     "dev:stop": "bash scripts/stop.sh",
     "backup": "bash scripts/backup.sh",
-    "status": "docker-compose -f docker-compose.dev.yml ps"
+    "status": "docker-compose -f docker-compose.dev.yml ps",
+    "es:index": "node scripts/create-es-index.js"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

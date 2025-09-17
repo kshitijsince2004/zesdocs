@@ -6,6 +6,7 @@ import { initializeDatabase, getDatabaseHealth } from './db/connection';
 import authRoutes from './routes/auth';
 import linksRoutes from './routes/links';
 import internalRoutes from './routes/internal';
+import searchRoutes from './routes/search';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/auth', authRoutes);
 app.use('/links', linksRoutes);
 app.use('/internal', internalRoutes);
+app.use('/search', searchRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
